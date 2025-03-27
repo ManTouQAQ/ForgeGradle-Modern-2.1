@@ -50,7 +50,7 @@ import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.maven.Conf2ScopeMappingContainer;
+//import org.gradle.api.artifacts.maven.Conf2ScopeMappingContainer;
 import org.gradle.api.artifacts.result.ArtifactResolutionResult;
 import org.gradle.api.artifacts.result.ArtifactResult;
 import org.gradle.api.artifacts.result.ComponentArtifactsResult;
@@ -61,7 +61,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.plugins.DslObject;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.plugins.MavenPluginConvention;
+//import org.gradle.api.plugins.MavenPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.GroovySourceSet;
 import org.gradle.api.tasks.JavaExec;
@@ -238,11 +238,11 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
         if (this.hasClientRun())
         {
             JavaExec exec = (JavaExec) project.getTasks().getByName("runClient");
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(project.getConfigurations().getByName(CONFIG_MC));
             exec.classpath(project.getConfigurations().getByName(CONFIG_MC_DEPS));
             exec.classpath(project.getConfigurations().getByName(CONFIG_START));
-            exec.classpath(jarTask.getArchivePath());
+            exec.classpath(jarTask.getArchiveFile().get().getAsFile());
             exec.dependsOn(jarTask);
             exec.jvmArgs(getClientJvmArgs(getExtension()));
             exec.args(getClientRunArgs(getExtension()));
@@ -251,11 +251,11 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
         if (this.hasServerRun())
         {
             JavaExec exec = (JavaExec) project.getTasks().getByName("runServer");
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(project.getConfigurations().getByName(CONFIG_MC));
             exec.classpath(project.getConfigurations().getByName(CONFIG_MC_DEPS));
             exec.classpath(project.getConfigurations().getByName(CONFIG_START));
-            exec.classpath(jarTask.getArchivePath());
+            exec.classpath(jarTask.getArchiveFile().get().getAsFile());
             exec.dependsOn(jarTask);
             exec.jvmArgs(getServerJvmArgs(getExtension()));
             exec.jvmArgs(getServerRunArgs(getExtension()));
@@ -516,16 +516,16 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
                 .plus(project.getConfigurations().getByName(CONFIG_MC))
                 .plus(project.getConfigurations().getByName(CONFIG_MC_DEPS)));
 
-        project.getConfigurations().getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(project.getConfigurations().getByName(CONFIG_DC_RESOLVED));
+        project.getConfigurations().getByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom(project.getConfigurations().getByName(CONFIG_DC_RESOLVED));
         project.getConfigurations().getByName(CONFIG_PROVIDED).extendsFrom(project.getConfigurations().getByName(CONFIG_DP_RESOLVED));
-        project.getConfigurations().getByName(api.getCompileConfigurationName()).extendsFrom(project.getConfigurations().getByName("compile"));
-        project.getConfigurations().getByName(JavaPlugin.TEST_COMPILE_CONFIGURATION_NAME).extendsFrom(project.getConfigurations().getByName("apiCompile"));
+        project.getConfigurations().getByName(api.getImplementationConfigurationName()).extendsFrom(project.getConfigurations().getByName("implementation"));
+        project.getConfigurations().getByName(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom(project.getConfigurations().getByName("implementation"));
 
         Javadoc javadoc = (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
         javadoc.setClasspath(main.getOutput().plus(main.getCompileClasspath()));
 
         // libs folder dependencies
-        project.getDependencies().add(JavaPlugin.COMPILE_CONFIGURATION_NAME, project.fileTree("libs"));
+        project.getDependencies().add(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME, project.fileTree("libs"));
 
         // set the compile target
         javaConv.setSourceCompatibility("1.6");
@@ -611,8 +611,8 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
 
     protected final void doDevTimeDeobf()
     {
-        final Task compileDummy = getDummyDep("compile", delayedFile(DIR_DEOBF_DEPS + "/compileDummy.jar"), TASK_DD_COMPILE);
-        final Task providedDummy = getDummyDep("compile", delayedFile(DIR_DEOBF_DEPS + "/providedDummy.jar"), TASK_DD_PROVIDED);
+        final Task compileDummy = getDummyDep("implementation", delayedFile(DIR_DEOBF_DEPS + "/compileDummy.jar"), TASK_DD_COMPILE);
+        final Task providedDummy = getDummyDep("implementation", delayedFile(DIR_DEOBF_DEPS + "/providedDummy.jar"), TASK_DD_PROVIDED);
 
         setupDevTimeDeobf(compileDummy, providedDummy);
     }
@@ -715,7 +715,7 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
     protected void doDepAtExtraction()
     {
         TaskExtractDepAts extract = makeTask(TASK_EXTRACT_DEP_ATS, TaskExtractDepAts.class);
-        extract.addCollection("compile");
+        extract.addCollection("implementation");
         extract.addCollection(CONFIG_PROVIDED);
         extract.addCollection(CONFIG_DEOBF_COMPILE);
         extract.addCollection(CONFIG_DEOBF_PROVIDED);
@@ -821,7 +821,7 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
         final Jar sourceJar = makeTask(TASK_SRC_JAR, Jar.class);
         final String retromappedSrc = getSourceSetFormatted(main, TMPL_RETROMAPED_RPL);
         sourceJar.from(main.getOutput().getResourcesDir());
-        sourceJar.setClassifier("sources");
+        sourceJar.getArchiveClassifier().set("sources");
         sourceJar.dependsOn(main.getCompileJavaTaskName(), main.getProcessResourcesTaskName(), getSourceSetFormatted(main, TMPL_TASK_RETROMAP_RPL));
 
         sourceJar.from(new Closure<Object>(UserBasePlugin.class) {
@@ -915,18 +915,18 @@ public abstract class UserBasePlugin<T extends UserBaseExtension> extends BasePl
 
     protected void mapConfigurations()
     {
-        if (project.getPlugins().hasPlugin("maven"))
-        {
-            MavenPluginConvention mavenConv = (MavenPluginConvention) project.getConvention().getPlugins().get("maven");
-            Conf2ScopeMappingContainer mappings = mavenConv.getConf2ScopeMappings();
-            ConfigurationContainer configs = project.getConfigurations();
-            final int priority = 500; // 500 is more than the compile config which is at 300
-
-            mappings.setSkipUnmappedConfs(true); // dont want unmapped confs bieng compile deps..
-            mappings.addMapping(priority, configs.getByName(CONFIG_PROVIDED), Conf2ScopeMappingContainer.PROVIDED);
-            mappings.addMapping(priority, configs.getByName(CONFIG_DEOBF_COMPILE), Conf2ScopeMappingContainer.COMPILE);
-            mappings.addMapping(priority, configs.getByName(CONFIG_DEOBF_PROVIDED), Conf2ScopeMappingContainer.PROVIDED);
-        }
+//        if (project.getPlugins().hasPlugin("maven"))
+//        {
+//            MavenPluginConvention mavenConv = (MavenPluginConvention) project.getConvention().getPlugins().get("maven");
+//            Conf2ScopeMappingContainer mappings = mavenConv.getConf2ScopeMappings();
+//            ConfigurationContainer configs = project.getConfigurations();
+//            final int priority = 500; // 500 is more than the compile config which is at 300
+//
+//            mappings.setSkipUnmappedConfs(true); // dont want unmapped confs bieng compile deps..
+//            mappings.addMapping(priority, configs.getByName(CONFIG_PROVIDED), Conf2ScopeMappingContainer.PROVIDED);
+//            mappings.addMapping(priority, configs.getByName(CONFIG_DEOBF_COMPILE), Conf2ScopeMappingContainer.COMPILE);
+//            mappings.addMapping(priority, configs.getByName(CONFIG_DEOBF_PROVIDED), Conf2ScopeMappingContainer.PROVIDED);
+//        }
     }
 
     private static final Spec<File> AT_SPEC = new Spec<File>()

@@ -68,6 +68,8 @@ public class ApplyS2STask extends DefaultTask
 
     // stuff defined on the tasks..
     private final List<Object> in = new LinkedList<Object>();
+
+    @OutputFile
     private Object out;
 
     @TaskAction
@@ -76,8 +78,8 @@ public class ApplyS2STask extends DefaultTask
         File out = getOut();
         File rangemap = getRangeMap();
         File rangelog = File.createTempFile("rangelog", ".txt", this.getTemporaryDir());
-        FileCollection srg = getSrgs();
-        FileCollection exc = getExcs();
+        FileCollection srg = getSrg();
+        FileCollection exc = getExc();
 
         InputSupplier inSup;
 
@@ -353,7 +355,7 @@ public class ApplyS2STask extends DefaultTask
         this.out = out;
     }
 
-    public FileCollection getSrgs()
+    public FileCollection getSrg()
     {
         return getProject().files(srg);
     }
@@ -373,7 +375,7 @@ public class ApplyS2STask extends DefaultTask
         this.srg.add(srg);
     }
 
-    public FileCollection getExcs()
+    public FileCollection getExc()
     {
         return getProject().files(exc);
     }

@@ -41,7 +41,7 @@ import net.minecraftforge.gradle.util.json.version.AssetIndex;
 import net.minecraftforge.gradle.util.json.version.AssetIndex.AssetEntry;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +49,7 @@ import com.google.common.io.Files;
 
 public class DownloadAssetsTask extends DefaultTask
 {
+    @InputDirectory
     DelayedFile           assetsDir;
 
     Object                assetIndex;
@@ -108,6 +109,7 @@ public class DownloadAssetsTask extends DefaultTask
         this.assetsDir = assetsDir;
     }
 
+    @InputFile
     public File getAssetsIndex()
     {
         return getProject().file(assetIndex);

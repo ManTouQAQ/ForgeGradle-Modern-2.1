@@ -36,8 +36,8 @@ import java.util.zip.ZipOutputStream;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.ParallelizableTask;
-import org.gradle.api.tasks.TaskAction;
+
+import org.gradle.api.tasks.*;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -94,25 +94,42 @@ import net.minecraftforge.gradle.util.mcp.ReobfExceptor;
  * </pre>
  *
  */
-@ParallelizableTask
+
 public class TaskSingleReobf extends DefaultTask
 {
+    @InputFile
     private Object                 jar;
+    @InputFiles
     private FileCollection         classpath;
 
     // because decomp stuff
+    @InputFile
     private Object                 fieldCsv;
+    @InputFile
     private Object                 methodCsv;
+    @InputFile
     private Object                 exceptorCfg;
+
+    @InputFile
+    @Optional
     private Object                 deobfFile;
+    @InputFile
+    @Optional
     private Object                 recompFile;
+
+    @Input
     private boolean                isDecomp          = false;
 
+    @InputFile
     private Object                 primarySrg;
+    @InputFiles
     private List<Object>           secondarySrgFiles = Lists.newArrayList();
-    private List<String>           extraSrgLines     = Lists.newArrayList();
 
+    @Input
+    private List<String>           extraSrgLines     = Lists.newArrayList();
+    @Input
     private List<ReobfTransformer> preTransformers   = Lists.newArrayList();
+    @Input
     private List<ReobfTransformer> postTransformers  = Lists.newArrayList();
 
     public TaskSingleReobf()
@@ -134,7 +151,7 @@ public class TaskSingleReobf extends DefaultTask
         srg.deleteOnExit();
         srgLines.deleteOnExit();
 
-        if (isDecomp())
+        if (getIsDecomp())
         {
             ReobfExceptor exc = new ReobfExceptor();
             exc.deobfJar = getDeobfFile();
@@ -414,12 +431,12 @@ public class TaskSingleReobf extends DefaultTask
         this.recompFile = recompFile;
     }
 
-    public boolean isDecomp()
+    public boolean getIsDecomp()
     {
         return isDecomp;
     }
 
-    public void setDecomp(boolean isDecomp)
+    public void setIsDecomp(boolean isDecomp)
     {
         this.isDecomp = isDecomp;
     }
