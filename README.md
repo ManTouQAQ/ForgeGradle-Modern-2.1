@@ -8,5 +8,7 @@ Minecraft mod development framework used by Forge and FML for the gradle build s
 ## Usage
 
 ```shell
-git clone 
+git clone https://github.com/ManTouQAQ/ForgeGradle-Modern-2.1
+cd ForgeGradle-Modern-2.1
+gradlew publishToMavenLocal
 ```
